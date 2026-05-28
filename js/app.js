@@ -89,7 +89,7 @@ const Nav = {
     }
     document.querySelectorAll(`[data-page="${page}"]`).forEach(l => l.classList.add('active'));
     const titles = {
-      dashboard: ['Dashboard', 'Welcome back, Manikanta!'],
+      dashboard: ['Dashboard', 'Welcome back, Srikanth!'],
       employees: ['Employee Management', 'Manage your team'],
       clients: ['Client Management', 'Track client relationships'],
       projects: ['Project Tracking', 'Monitor project progress'],

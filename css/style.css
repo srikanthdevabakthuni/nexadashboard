@@ -1818,3 +1818,15 @@ mark { background: rgba(13,110,253,0.15); color: var(--primary); border-radius: 
 
 /* Print */
 @media print { .sidebar, .topbar, .topbar-icon-btn { display: none !important; } .main-content { margin-left: 0 !important; } }
+
+/* Dashboard middle row — responsive 2-col layout */
+.dashboard-middle-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .dashboard-middle-row {
+    grid-template-columns: 1fr;
+  }
+}
