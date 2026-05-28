@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NexaWorks - Professional Employee & Client Management Dashboard" />
+  <meta name="keywords" content="dashboard, admin, employee management, project tracking" />
+  <meta name="author" content="Srikanth and Team" />
+  <meta name="theme-color" content="#0d6efd" />
+  <title>NexaWorks Admin | Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .page-loader { position:fixed;inset:0;background:#1a1f37;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.4s; }
+    .page-loader.hidden { opacity:0;pointer-events:none; }
+    .loader-logo { font-size:40px;color:#fff;font-weight:800;margin-bottom:20px; }
+    .loader-logo span { color:#0d6efd; }
+    .loader-bar { width:200px;height:3px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden; }
+    .loader-bar-fill { height:100%;background:#0d6efd;border-radius:4px;animation:loaderFill 1.2s ease forwards; }
+    @keyframes loaderFill { from{width:0}to{width:100%} }
+    /* Table toolbar */
+    .table-toolbar { display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--card-border);flex-wrap:wrap; }
+    .search-box { display:flex;align-items:center;gap:8px;background:var(--body-bg);border:1.5px solid var(--card-border);border-radius:8px;padding:8px 12px;flex:1;min-width:180px;max-width:300px;transition:var(--transition); }
+    .search-box:focus-within { border-color:var(--primary); }
+    .search-box i { color:var(--text-muted);font-size:13px; }
+    .search-box input { border:none;background:none;outline:none;flex:1;font-family:inherit;font-size:13.5px;color:var(--text-primary); }
+    .search-box input::placeholder { color:var(--text-muted); }
+    .filter-select { padding:8px 30px 8px 12px;border:1.5px solid var(--card-border);border-radius:8px;background:var(--body-bg);color:var(--text-primary);font-family:inherit;font-size:13.5px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236c7f94' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 10px center;background-size:11px; }
+    .table-responsive { overflow-x:auto; }
+    .table-custom { width:100%;border-collapse:collapse; }
+    .table-custom th { padding:12px 16px;text-align:left;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);background:var(--body-bg);border-bottom:2px solid var(--card-border);cursor:pointer;user-select:none;white-space:nowrap; }
+    .table-custom th:hover { color:var(--primary); }
+    .table-custom td { padding:14px 16px;border-bottom:1px solid var(--card-border);font-size:13.5px;color:var(--text-primary);vertical-align:middle; }
+    .table-custom tbody tr:hover { background:var(--body-bg); }
+    .table-custom tbody tr:last-child td { border-bottom:none; }
+    .pagination-custom { display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--card-border);flex-wrap:wrap;gap:10px; }
+    .pagination-info { font-size:12.5px;color:var(--text-muted); }
+    .pagination-pages { display:flex;gap:4px; }
+    /* Stat icon colors */
+    .stat-icon { width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0; }
+    .stat-icon.blue { background:rgba(13,110,253,0.12);color:#0d6efd; }
+    .stat-icon.green { background:rgba(25,135,84,0.12);color:#198754; }
+    .stat-icon.orange { background:rgba(253,126,20,0.12);color:#fd7e14; }
+    .stat-icon.red { background:rgba(220,53,69,0.12);color:#dc3545; }
+    .stat-icon.purple { background:rgba(124,58,237,0.12);color:#7c3aed; }
+    .stat-icon.teal { background:rgba(13,148,136,0.12);color:#0d9488; }
+    /* Project board */
+    .project-board { display:grid;grid-template-columns:repeat(3,1fr);gap:20px; }
+    .proj-col-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
+    .proj-col-title { font-size:13.5px;font-weight:700; }
+    .proj-count { background:var(--body-bg);border:1px solid var(--card-border);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700; }
+    .project-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px; }
+    .project-name { font-size:14px;font-weight:700;color:var(--text-primary); }
+    .project-client { font-size:12px;color:var(--text-muted);margin-top:2px; }
+    .project-desc { font-size:12.5px;color:var(--text-muted);margin-bottom:12px;line-height:1.5; }
+    .project-meta { display:flex;gap:14px;margin-bottom:12px; }
+    .project-meta-item { font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:5px; }
+    .project-members { display:flex;align-items:center;margin-top:10px; }
+    .project-member-more { width:28px;height:28px;border-radius:50%;background:var(--body-bg);border:2px solid var(--card-bg);margin-left:-6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-muted); }
+    .deadline-badge { font-size:11px; }
+    @media(max-width:900px) { .project-board { grid-template-columns:1fr; } }
+    /* Notification page */
+    .notif-page-list { padding:0; }
+    /* Client grid */
+    .client-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:20px; }
+    @media(max-width:900px) { .client-grid { grid-template-columns:1fr 1fr; } }
+    @media(max-width:576px) { .client-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- PAGE LOADER -->
+<div class="page-loader" id="pageLoader" aria-live="polite" aria-label="Loading NexaWorks">
+  <div class="loader-logo">Nexa<span>Works</span></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+<!-- ============================================================
+     MODALS
+     ============================================================ -->
+
+<!-- ADD EMPLOYEE MODAL -->
+<div class="modal-overlay" id="employeeModal" role="dialog" aria-labelledby="empModalTitle" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span id="empModalTitle"><i class="fas fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>Add New Employee</span>
+      <button class="modal-close" data-modal-close="employeeModal" aria-label="Close modal"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label" for="empFirstName">First Name *</label><input type="text" id="empFirstName" class="form-control" placeholder="e.g. Arjun" /></div>
+        <div class="form-group"><label class="form-label" for="empLastName">Last Name *</label><input type="text" id="empLastName" class="form-control" placeholder="e.g. Sharma" /></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="empEmail">Email Address *</label><input type="email" id="empEmail" class="form-control" placeholder="email@nexaworks.com" /></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label" for="empRole">Role</label><select id="empRole" class="form-control filter-select" style="width:100%"><option>Developer</option><option>Designer</option><option>Manager</option><option>HR</option><option>Finance</option><option>Marketing</option></select></div>
+        <div class="form-group"><label class="form-label" for="empDept">Department</label><select id="empDept" class="form-control filter-select" style="width:100%"><option>Engineering</option><option>Design</option><option>HR</option><option>Finance</option><option>Marketing</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="empSalary">Monthly Salary (₹)</label><input type="number" id="empSalary" class="form-control" placeholder="e.g. 75000" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-custom btn-light" data-modal-close="employeeModal">Cancel</button>
+      <button class="btn-custom btn-primary" id="saveEmployeeBtn"><i class="fas fa-save"></i> Save Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW EMPLOYEE MODAL -->
+<div class="modal-overlay" id="viewEmployeeModal" role="dialog" aria-labelledby="viewEmpTitle" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span id="viewEmpTitle"><i class="fas fa-user" style="color:var(--primary);margin-right:8px;"></i>Employee Profile</span>
+      <button class="modal-close" data-modal-close="viewEmployeeModal" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="emp-detail-header">
+        <div class="emp-detail-avatar" style="width:72px;height:72px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;background:#0d6efd;"></div>
+        <div class="emp-detail-name" style="font-size:18px;font-weight:800;text-align:center;"></div>
+        <div class="emp-detail-role" style="font-size:13px;color:var(--text-muted);text-align:center;margin-top:4px;"></div>
+      </div>
+      <div class="emp-detail-info" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px 0;">
+        <div class="emp-detail-field"><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Employee ID</label><span class="emp-detail-id" style="font-size:13.5px;font-weight:600;"></span></div>
+        <div class="emp-detail-field"><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Email</label><span class="emp-detail-email" style="font-size:13.5px;font-weight:600;"></span></div>
+        <div class="emp-detail-field"><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Status</label><span class="emp-detail-status" style="font-size:13.5px;font-weight:600;"></span></div>
+        <div class="emp-detail-field"><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Joined</label><span class="emp-detail-joined" style="font-size:13.5px;font-weight:600;"></span></div>
+        <div class="emp-detail-field"><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Salary</label><span class="emp-detail-salary" style="font-size:13.5px;font-weight:600;color:var(--success);"></span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-custom btn-light" data-modal-close="viewEmployeeModal">Close</button>
+      <button class="btn-custom btn-primary" onclick="Modal.close('viewEmployeeModal');"><i class="fas fa-pen"></i> Edit Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-label="Confirm deletion">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-body" style="padding:30px 24px;text-align:center;">
+      <div style="width:60px;height:60px;border-radius:50%;background:rgba(220,53,69,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-trash" style="font-size:24px;color:#dc3545;"></i></div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Remove Employee?</div>
+      <div class="confirm-modal-msg" style="font-size:13.5px;color:var(--text-muted);"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;gap:12px;">
+      <button class="btn-custom btn-light" data-modal-close="confirmModal" style="min-width:100px;">Cancel</button>
+      <button class="btn-custom btn-danger" id="confirmDeleteBtn" style="min-width:100px;"><i class="fas fa-trash"></i> Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CLIENT MODAL -->
+<div class="modal-overlay" id="addClientModal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span><i class="fas fa-briefcase" style="color:var(--primary);margin-right:8px;"></i>Add New Client</span>
+      <button class="modal-close" data-modal-close="addClientModal" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label" for="clientName">Company Name *</label><input type="text" id="clientName" class="form-control" placeholder="e.g. TechNova Solutions" /></div>
+      <div class="form-group"><label class="form-label" for="clientIndustry">Industry</label><input type="text" id="clientIndustry" class="form-control" placeholder="e.g. Technology" /></div>
+      <div class="form-group"><label class="form-label" for="clientContact">Contact Person</label><input type="text" id="clientContact" class="form-control" placeholder="e.g. Suresh Babu" /></div>
+      <div class="form-group"><label class="form-label" for="clientEmail">Email *</label><input type="email" id="clientEmail" class="form-control" placeholder="contact@company.com" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-custom btn-light" data-modal-close="addClientModal">Cancel</button>
+      <button class="btn-custom btn-primary" id="saveClientBtn"><i class="fas fa-save"></i> Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-overlay" id="addProjectModal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span><i class="fas fa-project-diagram" style="color:var(--primary);margin-right:8px;"></i>New Project</span>
+      <button class="modal-close" data-modal-close="addProjectModal" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label" for="projectTitle">Project Title *</label><input type="text" id="projectTitle" class="form-control" placeholder="e.g. Mobile App v3.0" /></div>
+      <div class="form-group"><label class="form-label" for="projectDesc">Description</label><textarea id="projectDesc" class="form-control" rows="3" placeholder="Brief project description..." style="resize:vertical;"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label" for="projectDeadline">Deadline</label><input type="date" id="projectDeadline" class="form-control" /></div>
+        <div class="form-group"><label class="form-label" for="projectPriority">Priority</label><select id="projectPriority" class="form-control filter-select" style="width:100%"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-custom btn-light" data-modal-close="addProjectModal">Cancel</button>
+      <button class="btn-custom btn-primary" id="saveProjectBtn"><i class="fas fa-save"></i> Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- WRAPPER -->
+<div class="wrapper">
+
+  <!-- ======================== SIDEBAR ======================== -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+
+    <a href="#" class="sidebar-brand" data-page="dashboard" aria-label="NexaWorks Home">
+      <div class="sidebar-brand-logo" aria-hidden="true"><i class="fas fa-star"></i></div>
+      <span class="sidebar-brand-text">Nexa<span>Works</span></span>
+    </a>
+
+    <div class="sidebar-user">
+      <div class="emp-avatar-placeholder sidebar-user-avatar" style="background:#0d6efd;font-size:14px;font-weight:700;color:#fff;" aria-hidden="true">SRI</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name admin-name">Srikanth</div>
+        <div class="sidebar-user-role">Super Admin</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Sidebar navigation">
+      <div class="nav-section-title">MAIN MENU</div>
+      <ul>
+        <li class="nav-item"><a href="#" class="nav-link active" data-page="dashboard" aria-label="Dashboard"><i class="fas fa-th-large" aria-hidden="true"></i><span class="nav-link-text">Dashboard</span></a></li>
+        <li class="nav-item"><a href="#" class="nav-link" data-page="employees" aria-label="Employees"><i class="fas fa-users" aria-hidden="true"></i><span class="nav-link-text">Employees</span><span class="nav-badge">10</span></a></li>
+        <li class="nav-item"><a href="#" class="nav-link" data-page="clients" aria-label="Clients"><i class="fas fa-briefcase" aria-hidden="true"></i><span class="nav-link-text">Clients</span></a></li>
+        <li class="nav-item"><a href="#" class="nav-link" data-page="projects" aria-label="Projects"><i class="fas fa-project-diagram" aria-hidden="true"></i><span class="nav-link-text">Projects</span><span class="nav-badge" style="background:var(--warning);color:#000;">3</span></a></li>
+      </ul>
+      <div class="nav-section-title">COMPONENTS</div>
+      <ul>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-submenu="reportsSubmenu" aria-expanded="false" aria-controls="reportsSubmenu"><i class="fas fa-chart-bar" aria-hidden="true"></i><span class="nav-link-text">Reports</span><i class="fas fa-chevron-down nav-chevron" aria-hidden="true"></i></a>
+          <ul class="submenu" id="reportsSubmenu" style="display:none;" role="menu">
+            <li class="nav-item"><a href="#" class="nav-link" role="menuitem">Revenue Reports</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" role="menuitem">HR Reports</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" role="menuitem">Project Reports</a></li>
+          </ul>
+        </li>
+        <li class="nav-item"><a href="#" class="nav-link" data-page="notifications" aria-label="Notifications"><i class="fas fa-bell" aria-hidden="true"></i><span class="nav-link-text">Notifications</span></a></li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-submenu="calSubmenu" aria-expanded="false" aria-controls="calSubmenu"><i class="fas fa-calendar-alt" aria-hidden="true"></i><span class="nav-link-text">Calendar</span><i class="fas fa-chevron-down nav-chevron" aria-hidden="true"></i></a>
+          <ul class="submenu" id="calSubmenu" style="display:none;" role="menu">
+            <li class="nav-item"><a href="#" class="nav-link" role="menuitem">My Calendar</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" role="menuitem">Team Calendar</a></li>
+          </ul>
+        </li>
+        <li class="nav-item"><a href="#" class="nav-link" data-page="settings" aria-label="Settings"><i class="fas fa-cog" aria-hidden="true"></i><span class="nav-link-text">Settings</span></a></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" class="nav-link" id="helpBtn" aria-label="Help & Support"><i class="fas fa-question-circle" aria-hidden="true"></i><span class="nav-link-text">Help & Support</span></a>
+      <a href="#" class="nav-link" id="logoutBtn" style="color:#ef4444;" aria-label="Logout"><i class="fas fa-sign-out-alt" aria-hidden="true"></i><span class="nav-link-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <!-- ======================== MAIN ======================== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- TOPBAR -->
+    <header class="topbar" role="banner">
+      <button class="topbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-controls="sidebar"><i class="fas fa-bars" aria-hidden="true"></i></button>
+      <div class="topbar-search" role="search">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <input type="search" placeholder="Search anything... (Esc to clear)" aria-label="Global search" autocomplete="off" />
+      </div>
+      <div class="topbar-right">
+        <span id="liveClock" style="font-size:13px;font-weight:600;color:var(--text-muted);padding:0 8px;" aria-live="polite" aria-label="Current time"></span>
+        <button class="topbar-icon-btn" id="speechBtn" data-tooltip="Voice Search" aria-label="Voice search" title="Voice Search"><i class="fas fa-microphone"></i></button>
+        <button class="topbar-icon-btn" id="fullscreenBtn" data-tooltip="Fullscreen" aria-label="Toggle fullscreen"><i class="fas fa-expand" aria-hidden="true"></i></button>
+        <div style="position:relative;">
+          <button class="topbar-icon-btn nd-bell-btn" data-dropdown="notifDropdown" aria-label="Notifications" aria-haspopup="true">
+            <i class="fas fa-bell" aria-hidden="true"></i>
+            <span class="nd-badge" id="notifUnreadBadge" aria-label="4 unread notifications">4</span>
+          </button>
+
+          <!-- NOTIFICATION DROPDOWN -->
+          <div class="nd-dropdown" id="notifDropdown" role="dialog" aria-label="Notifications panel">
+
+            <!-- Header -->
+            <div class="nd-head">
+              <div class="nd-head-left">
+                <span class="nd-head-title">Notifications</span>
+                <span class="nd-head-count">4 unread</span>
+              </div>
+              <button class="nd-mark-all" onclick="document.querySelectorAll('.nd-item.unread').forEach(el=>{el.classList.remove('unread')});document.getElementById('notifUnreadBadge').style.display='none';document.querySelector('.nd-head-count').textContent='All read';" title="Mark all as read" aria-label="Mark all as read">
+                <i class="fas fa-check-double"></i> Mark all read
+              </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="nd-tabs">
+              <button class="nd-tab active" data-ndtab="all">All</button>
+              <button class="nd-tab" data-ndtab="alerts">Alerts</button>
+              <button class="nd-tab" data-ndtab="system">System</button>
+            </div>
+
+            <!-- Items -->
+            <div class="nd-body">
+
+              <div class="nd-item unread" role="option" tabindex="0">
+                <div class="nd-icon nd-icon--danger">
+                  <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="nd-content">
+                  <div class="nd-item-title">Invoice Overdue <span class="nd-dot"></span></div>
+                  <div class="nd-item-desc">Client TechNova has an outstanding invoice</div>
+                  <div class="nd-item-time"><i class="fas fa-clock"></i> 5 hours ago</div>
+                </div>
+                <button class="nd-dismiss" title="Dismiss" aria-label="Dismiss notification" onclick="this.closest('.nd-item').remove();"><i class="fas fa-times"></i></button>
+              </div>
+
+              <div class="nd-item unread" role="option" tabindex="0">
+                <div class="nd-icon nd-icon--warning">
+                  <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="nd-content">
+                  <div class="nd-item-title">Project Deadline Soon <span class="nd-dot"></span></div>
+                  <div class="nd-item-desc">NexaCRM project is due in 2 days</div>
+                  <div class="nd-item-time"><i class="fas fa-clock"></i> 2 hours ago</div>
+                </div>
+                <button class="nd-dismiss" title="Dismiss" aria-label="Dismiss notification" onclick="this.closest('.nd-item').remove();"><i class="fas fa-times"></i></button>
+              </div>
+
+              <div class="nd-item unread" role="option" tabindex="0">
+                <div class="nd-icon nd-icon--primary">
+                  <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="nd-content">
+                  <div class="nd-item-title">New Team Member <span class="nd-dot"></span></div>
+                  <div class="nd-item-desc">Rahul Verma joined Engineering dept.</div>
+                  <div class="nd-item-time"><i class="fas fa-clock"></i> 3 hours ago</div>
+                </div>
+                <button class="nd-dismiss" title="Dismiss" aria-label="Dismiss notification" onclick="this.closest('.nd-item').remove();"><i class="fas fa-times"></i></button>
+              </div>
+
+              <div class="nd-item unread" role="option" tabindex="0">
+                <div class="nd-icon nd-icon--success">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="nd-content">
+                  <div class="nd-item-title">Task Completed <span class="nd-dot"></span></div>
+                  <div class="nd-item-desc">Arjun finished the UI Design milestone</div>
+                  <div class="nd-item-time"><i class="fas fa-clock"></i> 1 hour ago</div>
+                </div>
+                <button class="nd-dismiss" title="Dismiss" aria-label="Dismiss notification" onclick="this.closest('.nd-item').remove();"><i class="fas fa-times"></i></button>
+              </div>
+
+              <div class="nd-item" role="option" tabindex="0">
+                <div class="nd-icon nd-icon--info">
+                  <i class="fas fa-comment-alt"></i>
+                </div>
+                <div class="nd-content">
+                  <div class="nd-item-title">New Message</div>
+                  <div class="nd-item-desc">Kiran sent you a message in Projects</div>
+                  <div class="nd-item-time"><i class="fas fa-clock"></i> Yesterday</div>
+                </div>
+                <button class="nd-dismiss" title="Dismiss" aria-label="Dismiss notification" onclick="this.closest('.nd-item').remove();"><i class="fas fa-times"></i></button>
+              </div>
+
+            </div><!-- /nd-body -->
+
+            <!-- Footer -->
+            <div class="nd-foot">
+              <button class="nd-foot-btn" onclick="Nav.navigate('notifications');document.getElementById('notifDropdown').classList.remove('show');">
+                <i class="fas fa-bell"></i> View all notifications
+              </button>
+            </div>
+
+          </div><!-- /nd-dropdown -->
+        </div>
+        <label class="toggle-switch" data-tooltip="Dark Mode" aria-label="Toggle dark mode" style="margin:0 4px;flex-shrink:0;">
+          <input type="checkbox" id="darkModeToggle" aria-label="Dark mode toggle" />
+          <span class="toggle-slider" aria-hidden="true"></span>
+        </label>
+        <div style="position:relative;">
+          <div class="ud-trigger" data-dropdown="userDropdown" role="button" tabindex="0" aria-haspopup="true" aria-label="User menu">
+            <div class="ud-avatar" aria-hidden="true">SRI</div>
+            <div class="ud-info d-sm-none">
+              <div class="ud-name admin-name">Srikanth</div>
+              <div class="ud-role">Super Admin</div>
+            </div>
+            <i class="fas fa-chevron-down ud-chevron" aria-hidden="true"></i>
+          </div>
+
+          <!-- PROFILE DROPDOWN -->
+          <div class="ud-dropdown" id="userDropdown" role="menu">
+
+            <!-- User card header -->
+            <div class="ud-head">
+              <div class="ud-head-avatar">SRI</div>
+              <div class="ud-head-info">
+                <div class="ud-head-name admin-name">Srikanth</div>
+                <div class="ud-head-email">admin@nexaworks.com</div>
+                <span class="ud-head-badge"><i class="fas fa-shield-alt"></i> Super Admin</span>
+              </div>
+            </div>
+
+            <!-- Menu items -->
+            <div class="ud-menu">
+              <a href="#" class="ud-item" role="menuitem" onclick="Nav.navigate('settings');event.preventDefault();document.getElementById('userDropdown').classList.remove('show');">
+                <span class="ud-item-icon ud-item-icon--primary"><i class="fas fa-user-circle"></i></span>
+                <span class="ud-item-text">
+                  <span class="ud-item-label">My Profile</span>
+                  <span class="ud-item-sub">View & edit profile</span>
+                </span>
+                <i class="fas fa-chevron-right ud-item-arrow"></i>
+              </a>
+              <a href="#" class="ud-item" role="menuitem" onclick="Nav.navigate('settings');event.preventDefault();document.getElementById('userDropdown').classList.remove('show');">
+                <span class="ud-item-icon ud-item-icon--muted"><i class="fas fa-cog"></i></span>
+                <span class="ud-item-text">
+                  <span class="ud-item-label">Settings</span>
+                  <span class="ud-item-sub">Preferences & theme</span>
+                </span>
+                <i class="fas fa-chevron-right ud-item-arrow"></i>
+              </a>
+              <a href="#" class="ud-item" role="menuitem" onclick="Notifications.show('info','Camera','Requesting camera access...');document.getElementById('cameraBtn').click();event.preventDefault();document.getElementById('userDropdown').classList.remove('show');">
+                <span class="ud-item-icon ud-item-icon--info"><i class="fas fa-camera"></i></span>
+                <span class="ud-item-text">
+                  <span class="ud-item-label">Camera Access</span>
+                  <span class="ud-item-sub">Grant device camera</span>
+                </span>
+                <i class="fas fa-chevron-right ud-item-arrow"></i>
+              </a>
+            </div>
+
+            <div class="ud-sep"></div>
+
+            <!-- Stats row -->
+            <div class="ud-stats">
+              <div class="ud-stat"><div class="ud-stat-val">12</div><div class="ud-stat-lbl">Projects</div></div>
+              <div class="ud-stat"><div class="ud-stat-val">48</div><div class="ud-stat-lbl">Tasks</div></div>
+              <div class="ud-stat"><div class="ud-stat-val">4.9</div><div class="ud-stat-lbl">Rating</div></div>
+            </div>
+
+            <div class="ud-sep"></div>
+
+            <a href="#" id="logoutLink" class="ud-logout" role="menuitem" onclick="document.getElementById('logoutBtn').click();event.preventDefault();">
+              <i class="fas fa-sign-out-alt"></i> Sign Out
+            </a>
+
+          </div><!-- /ud-dropdown -->
+        </div>
+        <!-- Hidden camera button -->
+        <button id="cameraBtn" style="display:none;" aria-label="Camera access"></button>
+      </div>
+    </header>
+
+    <!-- PAGE TITLE BAR -->
+    <div style="padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px;" id="pageSubtitle">Welcome back Srikanth!</div>
+      </div>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="Nav.navigate('dashboard');event.preventDefault();">Home</a>
+        <i class="fas fa-chevron-right" style="font-size:10px;" aria-hidden="true"></i>
+        <span id="pageTitle2">Dashboard</span>
+      </nav>
+    </div>
+
+    <!-- ==================================================
+         PAGE: DASHBOARD
+    ================================================== -->
+    <section class="section-page active" id="page-dashboard" aria-label="Dashboard overview">
+      <div class="page-content">
+
+        <!-- STAT CARDS -->
+        <div class="grid-stat mb-6">
+          <div class="stat-card blue animate-in">
+            <div><div class="stat-label">Total Revenue</div><div class="stat-value">₹86.4L</div><div class="stat-change up"><i class="fas fa-arrow-up" aria-hidden="true"></i>+12.5% this month</div></div>
+            <div class="stat-icon blue" aria-hidden="true"><i class="fas fa-indian-rupee-sign"></i></div>
+          </div>
+          <div class="stat-card green animate-in">
+            <div><div class="stat-label">Total Employees</div><div class="stat-value">248</div><div class="stat-change up"><i class="fas fa-arrow-up" aria-hidden="true"></i>+8 this month</div></div>
+            <div class="stat-icon green" aria-hidden="true"><i class="fas fa-users"></i></div>
+          </div>
+          <div class="stat-card purple animate-in">
+            <div><div class="stat-label">Active Projects</div><div class="stat-value">32</div><div class="stat-change down"><i class="fas fa-arrow-down" aria-hidden="true"></i>-2 from last month</div></div>
+            <div class="stat-icon purple" aria-hidden="true"><i class="fas fa-project-diagram"></i></div>
+          </div>
+          <div class="stat-card orange animate-in">
+            <div><div class="stat-label">Active Clients</div><div class="stat-value">18</div><div class="stat-change up"><i class="fas fa-arrow-up" aria-hidden="true"></i>+3 this quarter</div></div>
+            <div class="stat-icon orange" aria-hidden="true"><i class="fas fa-handshake"></i></div>
+          </div>
+        </div>
+
+        <!-- CHARTS ROW -->
+        <div class="grid-2 mb-6">
+          <div class="card animate-in">
+            <div class="card-header">
+              <div><div class="card-title">Revenue vs Expenses</div><div class="card-subtitle">Annual financial overview</div></div>
+              <button class="btn-custom btn-outline btn-sm" id="exportPDFBtn" aria-label="Export chart"><i class="fas fa-download" aria-hidden="true"></i> Export</button>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:220px;"><canvas id="revenueChart" aria-label="Revenue chart"></canvas></div>
+            </div>
+          </div>
+          <div class="card animate-in">
+            <div class="card-header"><div class="card-title">Department Distribution</div><div class="card-subtitle">Employee headcount</div></div>
+            <div class="card-body">
+              <div class="chart-container" style="height:220px;"><canvas id="deptChart" aria-label="Department chart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MIDDLE ROW -->
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;margin-bottom:24px;" class="mb-6">
+
+          <!-- Activity Timeline -->
+          <div class="card animate-in">
+            <div class="card-header"><div class="card-title">Activity Timeline</div><button class="btn-custom btn-outline btn-sm" onclick="Notifications.show('info','Timeline','All activities loaded.')"><i class="fas fa-refresh"></i> Refresh</button></div>
+            <div class="card-body">
+              <div class="timeline" role="list">
+                <div class="timeline-item" role="listitem"><div class="timeline-line"><span class="timeline-dot" style="color:#198754;background:#198754;"></span></div><div class="timeline-body"><div class="timeline-title">Project Completed</div><div class="timeline-desc">Analytics Dashboard marked complete by Kiran Kumar</div><div class="timeline-time"><i class="fas fa-clock"></i> 1 hour ago</div></div></div>
+                <div class="timeline-item" role="listitem"><div class="timeline-line"><span class="timeline-dot" style="color:#0d6efd;background:#0d6efd;"></span></div><div class="timeline-body"><div class="timeline-title">New Employee Onboarded</div><div class="timeline-desc">Rahul Verma joined Engineering team</div><div class="timeline-time"><i class="fas fa-clock"></i> 3 hours ago</div></div></div>
+                <div class="timeline-item" role="listitem"><div class="timeline-line"><span class="timeline-dot" style="color:#7c3aed;background:#7c3aed;"></span></div><div class="timeline-body"><div class="timeline-title">Meeting Scheduled</div><div class="timeline-desc">Client review with GlobalTech at 3 PM</div><div class="timeline-time"><i class="fas fa-clock"></i> 5 hours ago</div></div></div>
+                <div class="timeline-item" role="listitem"><div class="timeline-line"><span class="timeline-dot" style="color:#dc3545;background:#dc3545;"></span></div><div class="timeline-body"><div class="timeline-title">Task Overdue</div><div class="timeline-desc">API Integration deadline passed for DataSync</div><div class="timeline-time"><i class="fas fa-clock"></i> Yesterday</div></div></div>
+                <div class="timeline-item" role="listitem"><div class="timeline-line"><span class="timeline-dot" style="color:#fd7e14;background:#fd7e14;"></span></div><div class="timeline-body"><div class="timeline-title">Invoice Sent</div><div class="timeline-desc">₹2.5L invoice sent to TechNova Solutions</div><div class="timeline-time"><i class="fas fa-clock"></i> 2 days ago</div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column: Weekly Activity + Location + Clipboard -->
+          <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="card animate-in">
+              <div class="card-header"><div class="card-title">Weekly Activity</div></div>
+              <div class="card-body"><div class="chart-container" style="height:130px;"><canvas id="activityChart" aria-label="Weekly activity chart"></canvas></div></div>
+            </div>
+
+            <!-- GEOLOCATION CARD -->
+            <div class="location-card animate-in" aria-label="User location">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div class="loc-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></div>
+                <button class="btn-custom" id="getLocationBtn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:6px 14px;font-size:12px;" aria-label="Refresh location"><i class="fas fa-map-marker-alt"></i> Refresh</button>
+              </div>
+              <div class="location-city" id="locationCity" aria-live="polite">Detecting location...</div>
+              <div class="location-coords" id="locationCoords" aria-live="polite">Fetching coordinates...</div>
+              <div class="location-time" id="locationTime" aria-live="polite"></div>
+            </div>
+
+            <!-- CLIPBOARD REFERRAL -->
+            <div class="card animate-in">
+              <div class="card-body" style="padding:16px 20px;">
+                <div class="card-title mb-3">Your Referral Code</div>
+                <div class="ref-code-box">
+                  <span class="ref-code" id="refCode" aria-label="Referral code">NEXA-SRI-2024</span>
+                  <button class="copy-btn" data-copy="NEXA-SRI-2024" aria-label="Copy referral code"><i class="fas fa-copy"></i> Copy</button>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Share to earn ₹500 per successful referral</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM ROW -->
+        <div class="grid-2 mb-6">
+          <div class="card animate-in">
+            <div class="card-header"><div><div class="card-title">Project Status</div><div class="card-subtitle">Quarterly overview</div></div></div>
+            <div class="card-body">
+              <div class="chart-container" style="height:180px;"><canvas id="projectChart" aria-label="Project status chart"></canvas></div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;text-align:center;">
+                <div style="padding:10px;background:var(--body-bg);border-radius:8px;"><div style="font-size:20px;font-weight:800;color:var(--success);">56</div><div style="font-size:11px;color:var(--text-muted);">Completed</div></div>
+                <div style="padding:10px;background:var(--body-bg);border-radius:8px;"><div style="font-size:20px;font-weight:800;color:var(--primary);">28</div><div style="font-size:11px;color:var(--text-muted);">In Progress</div></div>
+                <div style="padding:10px;background:var(--body-bg);border-radius:8px;"><div style="font-size:20px;font-weight:800;color:var(--warning);">11</div><div style="font-size:11px;color:var(--text-muted);">Pending</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card animate-in">
+            <div class="card-header"><div class="card-title">Top Performers</div><button class="btn-custom btn-outline btn-sm" onclick="Nav.navigate('employees')">View All</button></div>
+            <div class="card-body" style="padding-top:12px;">
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;"><div class="emp-info"><div class="emp-avatar-placeholder" style="background:#0d6efd;width:36px;height:36px;border-radius:50%;font-size:12px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">AS</div><div><div class="emp-name">Arjun Sharma</div><div class="emp-email">Senior Dev</div></div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:var(--primary);">98%</div><div class="progress-custom" style="width:80px;margin-top:4px;"><div class="progress-bar-custom blue" style="width:98%"></div></div></div></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;"><div class="emp-info"><div class="emp-avatar-placeholder" style="background:#7c3aed;width:36px;height:36px;border-radius:50%;font-size:12px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">PR</div><div><div class="emp-name">Priya Reddy</div><div class="emp-email">Lead Designer</div></div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#7c3aed;">94%</div><div class="progress-custom" style="width:80px;margin-top:4px;"><div class="progress-bar-custom purple" style="width:94%"></div></div></div></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;"><div class="emp-info"><div class="emp-avatar-placeholder" style="background:#198754;width:36px;height:36px;border-radius:50%;font-size:12px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">KK</div><div><div class="emp-name">Kiran Kumar</div><div class="emp-email">Engineering Mgr</div></div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:var(--success);">91%</div><div class="progress-custom" style="width:80px;margin-top:4px;"><div class="progress-bar-custom green" style="width:91%"></div></div></div></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;"><div class="emp-info"><div class="emp-avatar-placeholder" style="background:#0d9488;width:36px;height:36px;border-radius:50%;font-size:12px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">AK</div><div><div class="emp-name">Anjali Kapoor</div><div class="emp-email">Marketing Mgr</div></div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#0d9488;">88%</div><div class="progress-custom" style="width:80px;margin-top:4px;"><div class="progress-bar-custom teal" style="width:88%"></div></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================================================
+         PAGE: EMPLOYEES
+    ================================================== -->
+    <section class="section-page" id="page-employees" aria-label="Employee management">
+      <div class="page-content">
+        <div class="page-header animate-in" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+          <div><div class="page-title">Employee Management</div><div class="page-subtitle" style="font-size:13px;color:var(--text-muted);margin-top:2px;">Manage your workforce</div></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="export-btn" id="exportCsvBtn" aria-label="Export CSV"><i class="fas fa-file-csv"></i> CSV</button>
+            <button class="export-btn" id="printTableBtn" aria-label="Print table"><i class="fas fa-print"></i> Print</button>
+            <button class="btn-custom btn-primary" id="addEmployeeBtn" aria-label="Add new employee"><i class="fas fa-user-plus"></i> Add Employee</button>
+          </div>
+        </div>
+        <div class="grid-4 mb-6">
+          <div class="card animate-in" style="padding:16px 20px;display:flex;align-items:center;gap:14px;"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div><div style="font-size:22px;font-weight:800;">248</div><div class="text-sm" style="color:var(--text-muted);">Total Staff</div></div></div>
+          <div class="card animate-in" style="padding:16px 20px;display:flex;align-items:center;gap:14px;"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div><div style="font-size:22px;font-weight:800;">231</div><div class="text-sm" style="color:var(--text-muted);">Active</div></div></div>
+          <div class="card animate-in" style="padding:16px 20px;display:flex;align-items:center;gap:14px;"><div class="stat-icon orange"><i class="fas fa-user-clock"></i></div><div><div style="font-size:22px;font-weight:800;">12</div><div class="text-sm" style="color:var(--text-muted);">On Leave</div></div></div>
+          <div class="card animate-in" style="padding:16px 20px;display:flex;align-items:center;gap:14px;"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div><div style="font-size:22px;font-weight:800;">5</div><div class="text-sm" style="color:var(--text-muted);">Inactive</div></div></div>
+        </div>
+        <div class="card animate-in">
+          <div class="table-toolbar">
+            <div class="search-box" role="search"><i class="fas fa-search"></i><input type="search" id="empSearch" placeholder="Search by name, ID, email..." aria-label="Search employees" autocomplete="off" /></div>
+            <select class="filter-select" id="empRoleFilter" aria-label="Filter by department"><option value="">All Departments</option><option>Engineering</option><option>Design</option><option>HR</option><option>Finance</option><option>Marketing</option></select>
+          </div>
+          <div class="table-responsive" role="region" aria-label="Employee table">
+            <table class="table-custom data-table" aria-label="Employee list">
+              <thead><tr>
+                <th data-sort="name" scope="col">Employee <i class="fas fa-sort"></i></th>
+                <th data-sort="id" scope="col">ID <i class="fas fa-sort"></i></th>
+                <th data-sort="role" scope="col">Role <i class="fas fa-sort"></i></th>
+                <th data-sort="dept" scope="col">Dept <i class="fas fa-sort"></i></th>
+                <th data-sort="status" scope="col">Status <i class="fas fa-sort"></i></th>
+                <th data-sort="salary" scope="col">Salary <i class="fas fa-sort"></i></th>
+                <th scope="col">Actions</th>
+              </tr></thead>
+              <tbody id="empTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-custom" aria-label="Pagination">
+            <div class="pagination-info" id="empPaginationInfo" aria-live="polite"></div>
+            <div class="pagination-pages" id="empPaginationPages" role="navigation" aria-label="Page navigation"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================
+         PAGE: CLIENTS
+    ================================================== -->
+    <section class="section-page" id="page-clients" aria-label="Client management">
+      <div class="page-content">
+        <div class="page-header animate-in" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+          <div><div class="page-title">Client Management</div><div class="page-subtitle" style="font-size:13px;color:var(--text-muted);margin-top:2px;">Track and manage client relationships</div></div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="search-box" style="max-width:220px;"><i class="fas fa-search"></i><input type="search" id="clientSearch" placeholder="Search clients..." autocomplete="off" /></div>
+            <button class="btn-custom btn-primary" id="addClientBtn" aria-label="Add new client"><i class="fas fa-plus"></i> Add Client</button>
+          </div>
+        </div>
+        <div class="client-grid mb-6" id="clientGrid" aria-label="Client cards"></div>
+        <!-- Meeting Schedule -->
+        <div class="card animate-in">
+          <div class="card-header"><div class="card-title"><i class="fas fa-calendar-check" style="color:var(--primary);margin-right:8px;"></i>Upcoming Meetings</div><button class="btn-custom btn-outline btn-sm" onclick="Notifications.show('info','Meetings','Calendar integration coming soon.')"><i class="fas fa-plus"></i> Schedule</button></div>
+          <div class="card-body" style="padding:0;">
+            <table class="table-custom" aria-label="Meeting schedule">
+              <thead><tr><th>Client</th><th>Meeting</th><th>Date & Time</th><th>Mode</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div class="emp-info"><div class="emp-avatar-placeholder" style="background:#0d6efd;width:32px;height:32px;border-radius:8px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">TN</div><div class="emp-name">TechNova Solutions</div></div></td><td>Q4 Project Review</td><td>Dec 15, 2024 · 3:00 PM</td><td><span class="badge-custom badge-info"><i class="fas fa-video"></i> Video Call</span></td><td><span class="badge-custom badge-warning">Scheduled</span></td><td><div class="action-btns"><button class="action-btn view" onclick="Notifications.show('info','Join Meeting','Opening video call for TechNova...')" title="Join"><i class="fas fa-video"></i></button><button class="action-btn edit" onclick="Notifications.show('info','Edit','Meeting editor opening...')" title="Edit"><i class="fas fa-edit"></i></button></div></td></tr>
+                <tr><td><div class="emp-info"><div class="emp-avatar-placeholder" style="background:#7c3aed;width:32px;height:32px;border-radius:8px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">GT</div><div class="emp-name">GlobalTech Corp</div></div></td><td>Contract Renewal</td><td>Dec 18, 2024 · 11:00 AM</td><td><span class="badge-custom badge-success"><i class="fas fa-building"></i> In-Person</span></td><td><span class="badge-custom badge-primary">Confirmed</span></td><td><div class="action-btns"><button class="action-btn view" onclick="Notifications.show('info','GlobalTech','Contract renewal meeting details loaded.')" title="View"><i class="fas fa-eye"></i></button><button class="action-btn edit" onclick="Notifications.show('info','Edit','Meeting editor opening...')" title="Edit"><i class="fas fa-edit"></i></button></div></td></tr>
+                <tr><td><div class="emp-info"><div class="emp-avatar-placeholder" style="background:#dc3545;width:32px;height:32px;border-radius:8px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">DS</div><div class="emp-name">DataSync India</div></div></td><td>Feature Demo</td><td>Dec 20, 2024 · 2:30 PM</td><td><span class="badge-custom badge-info"><i class="fas fa-video"></i> Video Call</span></td><td><span class="badge-custom badge-secondary">Pending</span></td><td><div class="action-btns"><button class="action-btn view" onclick="Notifications.show('info','DataSync Demo','Feature demo details loaded.')" title="Join"><i class="fas fa-video"></i></button><button class="action-btn delete" onclick="Notifications.show('danger','Cancelled','DataSync meeting has been cancelled.')" title="Cancel"><i class="fas fa-times"></i></button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================
+         PAGE: PROJECTS
+    ================================================== -->
+    <section class="section-page" id="page-projects" aria-label="Project tracking">
+      <div class="page-content">
+        <div class="page-header animate-in" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+          <div><div class="page-title">Project Tracking</div><div class="page-subtitle" style="font-size:13px;color:var(--text-muted);margin-top:2px;">Kanban board — drag cards to update status</div></div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="search-box" style="max-width:220px;"><i class="fas fa-search"></i><input type="search" id="projectSearch" placeholder="Search projects..." autocomplete="off" /></div>
+            <button class="btn-custom btn-primary" id="addProjectBtn" aria-label="New project"><i class="fas fa-plus"></i> New Project</button>
+          </div>
+        </div>
+        <!-- Kanban Board -->
+        <div class="project-board mb-6">
+          <!-- In Progress -->
+          <div>
+            <div class="proj-col-header"><div class="proj-col-title" style="color:var(--primary);"><i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i>In Progress</div><span class="proj-count" id="count-in-progress">0</span></div>
+            <div class="drop-zone" id="proj-col-in-progress" data-status="In Progress" role="list" aria-label="In Progress projects"></div>
+          </div>
+          <!-- Completed -->
+          <div>
+            <div class="proj-col-header"><div class="proj-col-title" style="color:var(--success);"><i class="fas fa-check-circle" style="margin-right:6px;"></i>Completed</div><span class="proj-count" id="count-completed">0</span></div>
+            <div class="drop-zone" id="proj-col-completed" data-status="Completed" role="list" aria-label="Completed projects"></div>
+          </div>
+          <!-- Pending -->
+          <div>
+            <div class="proj-col-header"><div class="proj-col-title" style="color:var(--warning);"><i class="fas fa-pause-circle" style="margin-right:6px;"></i>Pending</div><span class="proj-count" id="count-pending">0</span></div>
+            <div class="drop-zone" id="proj-col-pending" data-status="Pending" role="list" aria-label="Pending projects"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================
+         PAGE: NOTIFICATIONS
+    ================================================== -->
+    <section class="section-page" id="page-notifications" aria-label="Notifications">
+      <div class="page-content">
+        <div class="page-header animate-in" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+          <div><div class="page-title">Notifications</div><div class="page-subtitle" style="font-size:13px;color:var(--text-muted);margin-top:2px;">Stay updated with your activity feed</div></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-custom btn-outline btn-sm" id="markAllReadBtn" aria-label="Mark all as read"><i class="fas fa-check-double"></i> Mark All Read</button>
+            <button class="btn-custom btn-outline btn-sm" id="clearAllNotifBtn" aria-label="Clear all notifications"><i class="fas fa-trash"></i> Clear All</button>
+          </div>
+        </div>
+        <div class="card animate-in">
+          <div class="card-header"><div class="card-title"><i class="fas fa-bell" style="color:var(--primary);margin-right:8px;"></i>All Notifications</div></div>
+          <div id="notifPageList" class="notif-page-list" role="list" aria-label="Notification list" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================
+         PAGE: SETTINGS
+    ================================================== -->
+    <section class="section-page" id="page-settings" aria-label="Settings">
+      <div class="page-content">
+        <div class="page-header animate-in" style="margin-bottom:24px;"><div class="page-title">Settings</div><div class="page-subtitle" style="font-size:13px;color:var(--text-muted);margin-top:2px;">Customize your NexaWorks experience</div></div>
+        <div class="grid-2">
+
+          <!-- Theme & Sidebar -->
+          <div class="card animate-in">
+            <div class="card-header"><div class="card-title"><i class="fas fa-palette" style="color:var(--primary);margin-right:8px;"></i>Appearance</div></div>
+            <div class="card-body">
+              <div class="settings-section">
+                <div class="settings-section-title">Theme</div>
+                <div class="settings-item">
+                  <div><div class="settings-item-label">Dark Mode</div><div class="settings-item-desc">Toggle between light and dark themes</div></div>
+                  <label class="toggle-switch" aria-label="Toggle dark mode"><input type="checkbox" id="darkModeToggleSettings" /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="settings-item">
+                  <div><div class="settings-item-label">Accent Color</div><div class="settings-item-desc">Choose your brand color</div></div>
+                  <div class="theme-colors" role="group" aria-label="Color picker">
+                    <button class="theme-color active" data-theme-color="blue" style="background:#0d6efd;" aria-label="Blue theme" title="Blue"></button>
+                    <button class="theme-color" data-theme-color="green" style="background:#198754;" aria-label="Green theme" title="Green"></button>
+                    <button class="theme-color" data-theme-color="purple" style="background:#7c3aed;" aria-label="Purple theme" title="Purple"></button>
+                    <button class="theme-color" data-theme-color="red" style="background:#dc3545;" aria-label="Red theme" title="Red"></button>
+                    <button class="theme-color" data-theme-color="orange" style="background:#fd7e14;" aria-label="Orange theme" title="Orange"></button>
+                    <button class="theme-color" data-theme-color="teal" style="background:#0d9488;" aria-label="Teal theme" title="Teal"></button>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <div class="settings-section-title">Sidebar</div>
+                <div class="settings-item">
+                  <div><div class="settings-item-label">Compact Sidebar</div><div class="settings-item-desc">Collapse to icon-only mode</div></div>
+                  <label class="toggle-switch" aria-label="Toggle compact sidebar"><input type="checkbox" id="compactSidebarToggle" /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Settings -->
+          <div class="card animate-in">
+            <div class="card-header"><div class="card-title"><i class="fas fa-user-circle" style="color:var(--primary);margin-right:8px;"></i>Profile Settings</div></div>
+            <div class="card-body">
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--card-border);">
+                <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;">SRI</div>
+                <div><div style="font-size:16px;font-weight:700;">Srikanth</div><div style="font-size:13px;color:var(--text-muted);">admin@nexaworks.com</div><button class="btn-custom btn-outline btn-sm mt-2" id="changeAvatarBtn" aria-label="Change avatar">Change Avatar</button></div>
+              </div>
+              <div class="form-group"><label class="form-label" for="settingsName">Full Name</label><input type="text" id="settingsName" class="form-control" value="Srikanth" /></div>
+              <div class="form-group"><label class="form-label" for="settingsEmail">Email Address</label><input type="email" id="settingsEmail" class="form-control" value="admin@nexaworks.com" /></div>
+              <div class="form-group"><label class="form-label" for="settingsPhone">Phone</label><input type="tel" id="settingsPhone" class="form-control" value="+91 98765 43210" /></div>
+              <button class="btn-custom btn-primary" id="saveProfileBtn" aria-label="Save profile"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+          </div>
+
+          <!-- Notification Preferences -->
+          <div class="card animate-in">
+            <div class="card-header"><div class="card-title"><i class="fas fa-bell" style="color:var(--primary);margin-right:8px;"></i>Notification Preferences</div></div>
+            <div class="card-body">
+              <div class="settings-section">
+                <div class="settings-section-title">Alert Preferences</div>
+                <div class="settings-item"><div><div class="settings-item-label">Email Notifications</div><div class="settings-item-desc">Receive updates via email</div></div><label class="toggle-switch"><input type="checkbox" checked onchange="Notifications.show('info','Settings','Email notifications '+(this.checked?'enabled':'disabled')+'.');" /><span class="toggle-slider"></span></label></div>
+                <div class="settings-item"><div><div class="settings-item-label">Browser Push Notifications</div><div class="settings-item-desc">Desktop push notifications</div></div><label class="toggle-switch"><input type="checkbox" checked onchange="Notifications.show('info','Settings','Browser notifications '+(this.checked?'enabled':'disabled')+'.');" /><span class="toggle-slider"></span></label></div>
+                <div class="settings-item"><div><div class="settings-item-label">Deadline Reminders</div><div class="settings-item-desc">48h before project deadlines</div></div><label class="toggle-switch"><input type="checkbox" checked onchange="Notifications.show('info','Settings','Deadline reminders '+(this.checked?'enabled':'disabled')+'.');" /><span class="toggle-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security -->
+          <div class="card animate-in">
+            <div class="card-header"><div class="card-title"><i class="fas fa-shield-alt" style="color:var(--primary);margin-right:8px;"></i>Security</div></div>
+            <div class="card-body">
+              <div class="form-group"><label class="form-label" for="currentPass">Current Password</label><input type="password" id="currentPass" class="form-control" placeholder="••••••••" /></div>
+              <div class="form-group"><label class="form-label" for="newPass">New Password</label><input type="password" id="newPass" class="form-control" placeholder="Min. 8 characters" /></div>
+              <div class="form-group"><label class="form-label" for="confirmPass">Confirm Password</label><input type="password" id="confirmPass" class="form-control" placeholder="Re-enter new password" /></div>
+              <button class="btn-custom btn-primary" id="updatePasswordBtn" aria-label="Update password"><i class="fas fa-lock"></i> Update Password</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  // Loader
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const loader = document.getElementById('pageLoader');
+      if (loader) { loader.classList.add('hidden'); setTimeout(() => loader.remove(), 400); }
+    }, 1300);
+  });
+  // Sync project count badges
+  function updateProjCounts() {
+    ['in-progress','completed','pending'].forEach(id => {
+      const col = document.getElementById('proj-col-' + id);
+      const badge = document.getElementById('count-' + id);
+      if (col && badge) badge.textContent = col.children.length;
+    });
+  }
+</script>
+</body>
+</html>
